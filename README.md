@@ -1,4 +1,4 @@
-# Tehdesa Order System
+# Tehdesa
 
 Sistem Pemesanan Berbasis Website untuk usaha Tehdesa.  
 Dibangun menggunakan Laravel 10, dengan fitur:
@@ -15,12 +15,6 @@ Dibangun menggunakan Laravel 10, dengan fitur:
 
 1. [Prasyarat](#prasyarat)  
 2. [Instalasi](#instalasi)  
-3. [Konfigurasi `.env`](#konfigurasi-env)  
-4. [Menjalankan Migrasi & Seeder](#menjalankan-migrasi--seeder)  
-5. [Menjalankan Aplikasi](#menjalankan-aplikasi)  
-6. [Fitur Utama](#fitur-utama)  
-7. [Struktur Direktori](#struktur-direktori)  
-8. [Catatan Tambahan](#catatan-tambahan)  
 
 ---
 
@@ -41,11 +35,10 @@ Sebelum memulai, pastikan Anda sudah menginstal hal-hal berikut pada mesin penge
 1. **Clone repository**  
    ```bash
    git clone https://github.com/username/tehdesa-order-system.git
-   cd tehdesa-order-system
+   cd EsTehDesa
    cp .env.example .env
    composer install
    php artisan key:generate
    // Atur koneksi DB di .env
    php artisan migrate
    npm install && npm run dev // jika ada asset front‐end
-```
