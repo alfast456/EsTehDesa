@@ -25,82 +25,56 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi minimal: items harus array dengan product_id dan quantity
-        $validated = $request->validate([
-            'items'               => 'required|array|min:1',
-            'items.*.product_id'  => 'required|exists:products,id',
-            'items.*.quantity'    => 'required|integer|min:1',
+        // Validasi minimal: items wajib, qty > 0
+        $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity'   => 'required|integer|min:1',
         ]);
 
-        // Pastikan stock cukup untuk setiap item (opsional tapi disarankan)
-        foreach ($validated['items'] as $item) {
-            $p = Product::find($item['product_id']);
-            if ($p->stock < $item['quantity']) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors("Stok produk “{$p->name}” (ID: {$p->id}) tidak mencukupi.");
-            }
+        // Hitung total amount
+        $totalAmount = 0;
+        foreach ($request->items as $item) {
+            $prod = Product::find($item['product_id']);
+            $line = $prod->price * $item['quantity'];
+            $totalAmount += $line;
         }
 
-        // Transaksi DB agar konsisten
-        DB::beginTransaction();
-        try {
-            // 1. Buat header Order
-            $order = new Order;
-            $order->user_id       = auth()->id();
-            $order->total_amount  = 0;       // sementara, akan diupdate setelah hitung
-            $order->status        = 'pending';
-            $order->payment_method = 'QRIS';
-            $order->qr_code_data  = '';      // akan diisi setelah hitung total
-            $order->save();
+        // Simpan Order header
+        $order = Order::create([
+            'user_id'    => auth()->id(), // atau sesuai kebutuhan
+            'total_amount' => $totalAmount,
+            'status'       => 'pending',   // status awal
+            // Anda bisa menambahkan kolom lain misalnya user_id, etc.
+        ]);
 
-            $total = 0;
-            // 2. Simpan setiap OrderDetail dan kurangi stok
-            foreach ($validated['items'] as $item) {
-                $product = Product::findOrFail($item['product_id']);
-                $sub = $product->price * $item['quantity'];
+        // Simpan OrderDetail
+        foreach ($request->items as $item) {
+            $prod = Product::find($item['product_id']);
 
-                $detail = new OrderDetail;
-                $detail->order_id   = $order->id;
-                $detail->product_id = $product->id;
-                $detail->quantity   = $item['quantity'];
-                $detail->unit_price = $product->price;
-                $detail->sub_total  = $sub;
-                $detail->save();
-
-                // Kurangi stok
-                $product->decrement('stock', $item['quantity']);
-
-                $total += $sub;
-            }
-
-            // 3. Update total_amount & generate payload QRIS (JSON)
-            $order->total_amount = $total;
-            $payload = [
-                'order_id' => $order->id,
-                'amount'   => $total,
-                'timestamp' => Carbon::now()->toIso8601String(),
-            ];
-            $order->qr_code_data = json_encode($payload);
-            $order->save();
-
-            // 4. Buat entri Transaction dengan status ‘unpaid’
-            Transaction::create([
-                'order_id'       => $order->id,
-                'payment_status' => 'unpaid',
-                // paid_at tetap null
+            OrderDetail::create([
+                'order_id'   => $order->id,
+                'product_id' => $prod->id,
+                'quantity'   => $item['quantity'],
+                'unit_price' => $prod->price,
+                'sub_total'  => $prod->price * $item['quantity'],
             ]);
 
-            DB::commit();
-            return redirect()->route('orders.show', $order->id)
-                ->with('success', 'Order berhasil dibuat. Silakan lakukan pembayaran (simulasi) menggunakan QRIS.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()
-                ->withInput()
-                ->withErrors('Terjadi kesalahan: ' . $e->getMessage());
+            // Kurangi stok produk jika perlu:
+            $prod->decrement('stock', $item['quantity']);
         }
+
+        // Buat entri Transaction (tanpa QRIS otomatis)
+        Transaction::create([
+            'order_id'       => $order->id,
+            'payment_status' => 'unpaid',
+            // 'qr_code_data'  => null,  // kita tidak butuh QRIS otomatis
+        ]);
+
+        return redirect()->route('orders.show', $order->id)
+            ->with('success', 'Order berhasil dibuat. Silakan lakukan pembayaran secara manual menggunakan QRIS.');
     }
+
 
     /**
      * Tampilkan detail order dan tombol pembayaran/simulasi.
@@ -133,7 +107,7 @@ class OrderController extends Controller
         $trx->save();
 
         return redirect()->route('orders.show', $order->id)
-            ->with('success', 'Pembayaran berhasil (simulasi).');
+            ->with('success', 'Pembayaran berhasil');
     }
 
     /**

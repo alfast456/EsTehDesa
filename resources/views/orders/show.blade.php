@@ -5,103 +5,117 @@
   <!-- Judul & Tombol -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 text-gray-800">Detail Pesanan #{{ $order->id }}</h1>
-    <a href="{{ route('orders.create') }}" class="btn btn-primary">
-      <i class="fas fa-plus"></i> Buat Pesanan Baru
-    </a>
+    <div>
+      <a href="{{ route('orders.create') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Buat Pesanan Baru
+      </a>
+      @if($order->status === 'paid')
+        <a href="{{ route('orders.print', $order->id) }}" class="btn btn-dark">
+          <i class="fas fa-print"></i> Cetak Struk
+        </a>
+      @endif
+    </div>
   </div>
 
   <!-- Notifikasi -->
   @if(session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>
   @endif
-  @if(session('error'))
-    <div class="alert alert-danger">{{ session('error') }}</div>
-  @endif
 
   <!-- Informasi Pesanan -->
   <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="font-weight-bold text-primary mb-0">Informasi Pesanan</h6>
+    </div>
     <div class="card-body">
-      <div class="row mb-3">
+      <div class="row mb-2">
         <div class="col-md-4">
           <p><strong>ID Pesanan:</strong> {{ $order->id }}</p>
         </div>
         <div class="col-md-4">
-          <p><strong>Tanggal:</strong> {{ $order->created_at->format('d-m-Y H:i') }}</p>
-        </div>
-        <div class="col-md-4">
-          <p><strong>Status:</strong> 
-            <span class="text-capitalize">{{ $order->status }}</span>
+          <p>
+            <strong>Total Pembayaran:</strong> 
+            Rp {{ number_format($order->total_amount, 0, ',', '.') }}
           </p>
         </div>
-      </div>
-
-      <!-- Daftar Item (POS-style) -->
-      <div class="row">
-        @foreach($order->details as $detail)
-          @php
-            $prod = $detail->product;
-            $imgUrl = ($prod->image && Storage::exists('public/'.$prod->image))
-                      ? asset('storage/'.$prod->image)
-                      : asset('images/no-image.png');
-          @endphp
-          <div class="col-6 col-sm-4 col-md-3 mb-3">
-            <div class="card h-100">
-              <img src="{{ $imgUrl }}" class="card-img-top product-img" alt="{{ $prod->name }}">
-              <div class="card-body p-2">
-                <h6 class="card-title mb-1 text-truncate">{{ $prod->name }}</h6>
-                <p class="mb-1 small text-muted">Qty: {{ $detail->quantity }}</p>
-                <p class="mb-0 small text-success">
-                  Rp {{ number_format($detail->unit_price, 0, ',', '.') }} × {{ $detail->quantity }}
-                </p>
-                <p class="mb-0 font-weight-bold">
-                  Rp {{ number_format($detail->sub_total, 0, ',', '.') }}
-                </p>
-              </div>
-            </div>
-          </div>
-        @endforeach
-
-        @if($order->details->isEmpty())
-          <div class="col-12 text-center">
-            <p class="text-muted">Tidak ada item pada pesanan ini.</p>
-          </div>
-        @endif
-      </div>
-
-      <!-- Ringkasan Total -->
-      <div class="d-flex justify-content-end">
-        <h5>Total: <span class="text-success">
-          Rp {{ number_format($order->total_amount, 0, ',', '.') }}
-        </span></h5>
+        <div class="col-md-4">
+          <p class="text-capitalize">
+            <strong>Status:</strong> {{ $order->status }}
+          </p>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Bagian Pembayaran / Cetak Struk -->
-  @if($order->status === 'pending')
-    <div class="card shadow mb-4">
-      <div class="card-body">
-        <p class="font-weight-bold">Scan QR berikut untuk bayar (simulasi):</p>
-        <div class="border p-3 mb-3 d-inline-block">
-          {!! QrCode::size(200)->generate($order->qr_code_data) !!}
-        </div>
+  <!-- Rincian Barang -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="font-weight-bold text-primary mb-0">Rincian Pesanan</h6>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead class="thead-light">
+            <tr>
+              <th>No</th>
+              <th>Nama Produk</th>
+              <th class="text-right">Qty</th>
+              <th class="text-right">Harga Satuan (Rp)</th>
+              <th class="text-right">Sub Total (Rp)</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach($order->details as $idx => $detail)
+              <tr>
+                <td>{{ $idx + 1 }}</td>
+                <td>{{ $detail->product->name }}</td>
+                <td class="text-right">{{ $detail->quantity }}</td>
+                <td class="text-right">{{ number_format($detail->unit_price, 0, ',', '.') }}</td>
+                <td class="text-right">{{ number_format($detail->sub_total, 0, ',', '.') }}</td>
+              </tr>
+            @endforeach
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="4" class="text-right">Total:</th>
+              <th class="text-right">
+                Rp {{ number_format($order->total_amount, 0, ',', '.') }}
+              </th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bagian Pembayaran Manual -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="font-weight-bold text-primary mb-0">Pembayaran</h6>
+    </div>
+    <div class="card-body">
+      @if($order->status === 'pending')
+        <p class="mb-3">
+          Silakan lakukan pembayaran menggunakan QRIS secara manual (scan kode QRIS di kasir Anda atau gunakan aplikasi dompet digital).
+        </p>
         <form action="{{ route('orders.pay', $order->id) }}" method="POST">
           @csrf
           <button type="submit" class="btn btn-success">
-            <i class="fas fa-credit-card"></i> Bayar (Simulasi)
+            <i class="fas fa-check-circle"></i> Tandai Sudah Dibayar
           </button>
         </form>
-      </div>
+      @else
+        <div class="alert alert-success">
+          <p>
+            Pembayaran <strong>berhasil</strong> pada
+            {{ $order->transaction->paid_at->format('d-m-Y H:i') }}.
+          </p>
+          <a href="{{ route('orders.print', $order->id) }}" class="btn btn-dark">
+            <i class="fas fa-print"></i> Cetak Struk
+          </a>
+        </div>
+      @endif
     </div>
-  @else
-    <div class="alert alert-success shadow mb-4">
-      <p>Pembayaran <strong>sukses</strong> pada 
-        {{ $order->transaction->paid_at->format('d-m-Y H:i') }}
-      </p>
-      <a href="{{ route('orders.print', $order->id) }}" class="btn btn-dark">
-        <i class="fas fa-print"></i> Cetak Struk
-      </a>
-    </div>
-  @endif
+  </div>
 </div>
 @endsection
