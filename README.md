@@ -41,4 +41,5 @@ Sebelum memulai, pastikan Anda sudah menginstal hal-hal berikut pada mesin penge
    php artisan key:generate
    // Atur koneksi DB di .env
    php artisan migrate
-   npm install && npm run dev // jika ada asset front‐end
+   npm install
+   php artisan storage:link
