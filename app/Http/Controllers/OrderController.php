@@ -16,7 +16,7 @@ class OrderController extends Controller
     public function create()
     {
         // Ambil semua produk (nama, harga, stok) untuk dropdown
-        $products = Product::select(['id', 'name', 'price', 'stock'])->orderBy('name')->get();
+        $products = Product::select(['id', 'name', 'price', 'stock', 'image'])->orderBy('name')->get();
         return view('orders.create', compact('products'));
     }
 

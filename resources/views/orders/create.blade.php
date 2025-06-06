@@ -1,192 +1,271 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+  /* ---------- Custom untuk tampilan POS ---------- */
+  .product-card {
+    cursor: pointer;
+    transition: transform 0.1s ease-in-out;
+  }
+  .product-card:hover {
+    transform: scale(1.02);
+  }
+  .product-img {
+    height: 120px;
+    object-fit: cover;
+  }
+  .cart-item-img {
+    height: 50px;
+    width: 50px;
+    object-fit: cover;
+  }
+  .btn-qty {
+    padding: 0 8px;
+  }
+  @media (max-width: 767.98px) {
+    /* Mobile: agar grid vertikal, cart di bawah */
+    #productList {
+      margin-bottom: 1.5rem;
+    }
+  }
+</style>
+
 <div class="container-fluid">
   <!-- Judul dan tombol kembali -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 text-gray-800">Buat Pesanan Baru</h1>
-    <a href="{{ url()->previous() }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-left"></i> Kembali
+    <h1 class="h3 text-gray-800">Buat Pesanan (POS)</h1>
+    <a href="{{ route('dashboard') }}" class="btn btn-secondary">
+      <i class="fas fa-tachometer-alt"></i> Dashboard
     </a>
   </div>
 
-  <!-- Validasi & Error -->
-  @if ($errors->any())
-    <div class="alert alert-danger">
-      <ul class="mb-0">
-        @foreach ($errors->all() as $err)
-          <li>{{ $err }}</li>
-        @endforeach
-      </ul>
-    </div>
-  @endif
+  <!-- Form utama (POST ke store) -->
+  <form action="{{ route('orders.store') }}" method="POST" id="orderForm">
+    @csrf
 
-  <div class="card shadow mb-4">
-    <div class="card-body">
-      <form action="{{ route('orders.store') }}" method="POST" id="orderForm">
-        @csrf
+    <div class="row">
+      <!-- 1) Daftar Produk (POS Grid) -->
+      <div class="col-lg-8" id="productList">
+        <div class="row">
+          @foreach($products as $product)
+            <div class="col-6 col-sm-4 col-md-3 mb-3">
+              <div class="card product-card h-100" data-id="{{ $product->id }}"
+                                     data-name="{{ $product->name }}"
+                                     data-price="{{ $product->price }}"
+                                     data-stock="{{ $product->stock }}"
+                                     @if($product->image && Storage::exists('public/'.$product->image))
+                                       data-image="{{ asset('storage/'.$product->image) }}"
+                                     @else
+                                       data-image="{{ asset('images/no-image.png') }}"
+                                     @endif
+                                     >
+                @if($product->image && Storage::exists('public/'.$product->image))
+                  <img src="{{ asset('storage/'.$product->image) }}" class="card-img-top product-img" alt="{{ $product->name }}">
+                @else
+                  <div class="d-flex align-items-center justify-content-center bg-light product-img">
+                    <span class="text-muted">No Image</span>
+                  </div>
+                @endif
+                <div class="card-body p-2">
+                  <h6 class="card-title mb-1 text-truncate">{{ $product->name }}</h6>
+                  <p class="mb-0 text-success small">
+                    Rp {{ number_format($product->price, 0, ',', '.') }}
+                  </p>
+                  <p class="mb-0 text-muted small">Stok: {{ $product->stock }}</p>
+                </div>
+              </div>
+            </div>
+          @endforeach
 
-        <div class="table-responsive">
-          <table class="table table-bordered" id="orderTable">
-            <thead class="thead-light">
-              <tr>
-                <th style="width: 45%;">Produk</th>
-                <th style="width: 20%;">Harga (Rp)</th>
-                <th style="width: 15%;">Stok</th>
-                <th style="width: 10%;">Qty</th>
-                <th style="width: 10%;">Subtotal (Rp)</th>
-                <th style="width: 10%;">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr class="order-row">
-                <td>
-                  <select name="items[0][product_id]" class="form-control product-select" required>
-                    <option value="">-- Pilih Produk --</option>
-                    @foreach($products as $p)
-                      <option value="{{ $p->id }}"
-                              data-price="{{ $p->price }}"
-                              data-stock="{{ $p->stock }}">
-                        {{ $p->name }}
-                      </option>
-                    @endforeach
-                  </select>
-                </td>
-                <td>
-                  <input type="text" name="items[0][price]" class="form-control price-input" value="0" readonly>
-                </td>
-                <td>
-                  <input type="text" name="items[0][stock]" class="form-control stock-input" value="0" readonly>
-                </td>
-                <td>
-                  <input type="number" name="items[0][quantity]" class="form-control qty-input" min="1" value="1" required>
-                </td>
-                <td>
-                  <input type="text" name="items[0][subtotal]" class="form-control subtotal-input" value="0" readonly>
-                </td>
-                <td class="text-center">
-                  <button type="button" class="btn btn-sm btn-success add-row">
-                    <i class="fas fa-plus"></i>
-                  </button>
-                  <button type="button" class="btn btn-sm btn-danger remove-row" style="display: none;">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr>
-                <th colspan="4" class="text-right">Total Keseluruhan:</th>
-                <th>
-                  <input type="text" id="grandTotal" class="form-control" value="0" readonly>
-                </th>
-                <th></th>
-              </tr>
-            </tfoot>
-          </table>
+          @if($products->isEmpty())
+            <div class="col-12 text-center">
+              <p class="text-muted">Belum ada produk tersedia.</p>
+            </div>
+          @endif
+        </div>
+      </div>
+
+      <!-- 2) Keranjang (Cart Summary) -->
+      <div class="col-lg-4">
+        <div class="card shadow mb-3">
+          <div class="card-header py-2">
+            <h6 class="m-0 font-weight-bold text-primary">Keranjang</h6>
+          </div>
+          <div class="card-body" style="max-height: 60vh; overflow-y: auto;">
+            <div id="cartItems">
+              <!-- Isi dinamis via JavaScript -->
+              <p class="text-center text-muted">Keranjang kosong</p>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="d-flex justify-content-between">
+              <strong>Total:</strong>
+              <strong id="grandTotalDisplay">Rp 0</strong>
+            </div>
+          </div>
         </div>
 
-        <button type="submit" class="btn btn-primary">
-          <i class="fas fa-shopping-cart"></i> Proses Pesanan
-        </button>
-        <a href="{{ route('dashboard') }}" class="btn btn-secondary">Batal</a>
-      </form>
+        <!-- Tombol Submit -->
+        <div class="text-center">
+          <button type="submit" class="btn btn-success btn-block mb-3" id="submitOrderBtn" disabled>
+            <i class="fas fa-shopping-cart"></i> Proses Pesanan
+          </button>
+        </div>
+      </div>
     </div>
-  </div>
+  </form>
 </div>
 
-<!-- JQuery & Bootstrap JS sudah diasumsikan sudah di-include di layouts.app -->
+<!-- JQuery & Bootstrap sudah di‐include dalam layouts.app -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  let rowIndex = 1; // untuk menghitung indeks items[]
+  document.addEventListener('DOMContentLoaded', function() {
+    // Struktur data keranjang: 
+    // { product_id: { id, name, price, image, stock, qty } }
+    let cart = {};
 
-  // Fungsi untuk menghitung subtotal pada satu baris
-  function recalcRow($row) {
-    const price = parseFloat($row.find('.price-input').val()) || 0;
-    const qty   = parseInt($row.find('.qty-input').val()) || 0;
-    const sub   = price * qty;
-    $row.find('.subtotal-input').val(sub.toLocaleString('id-ID'));
-    recalcGrandTotal();
-  }
+    const cartItemsEl = $('#cartItems');
+    const grandTotalDisplay = $('#grandTotalDisplay');
+    const submitOrderBtn = $('#submitOrderBtn');
 
-  // Hitung total keseluruhan
-  function recalcGrandTotal() {
-    let sum = 0;
-    $('.subtotal-input').each(function() {
-      // `this.value` adalah string format ribuan, hilangkan pemisah
-      let val = $(this).val().replace(/\./g, '').replace(/,/g, '');
-      sum += parseFloat(val) || 0;
-    });
-    $('#grandTotal').val(sum.toLocaleString('id-ID'));
-  }
+    // Fungsi untuk mem‐render cart ke HTML
+    function renderCart() {
+      cartItemsEl.empty();
+      let total = 0;
+      const keys = Object.keys(cart);
+      if (keys.length === 0) {
+        cartItemsEl.html('<p class="text-center text-muted">Keranjang kosong</p>');
+        submitOrderBtn.prop('disabled', true);
+      } else {
+        submitOrderBtn.prop('disabled', false);
+        keys.forEach((pid, idx) => {
+          const item = cart[pid];
+          const sub = item.price * item.qty;
+          total += sub;
 
-  // Saat user memilih produk di row tertentu
-  $(document).on('change', '.product-select', function() {
-    const $row = $(this).closest('tr');
-    const price = parseFloat($(this).find(':selected').data('price')) || 0;
-    const stock = parseInt($(this).find(':selected').data('stock')) || 0;
+          // Elemen keranjang per produk
+          const itemHtml = `
+            <div class="d-flex align-items-center mb-2" data-id="${item.id}">
+              <img src="${item.image}" class="cart-item-img rounded mr-2" alt="${item.name}">
+              <div class="flex-grow-1">
+                <p class="mb-1 text-truncate">${item.name}</p>
+                <div class="d-flex align-items-center">
+                  <button class="btn btn-sm btn-secondary btn-qty decrease-qty" ${item.qty <= 1 ? 'disabled' : ''}>–</button>
+                  <input type="text" class="form-control form-control-sm mx-1 text-center qty-input" 
+                         value="${item.qty}" 
+                         style="width: 40px;" readonly>
+                  <button class="btn btn-sm btn-secondary btn-qty increase-qty" ${item.qty >= item.stock ? 'disabled' : ''}>+</button>
+                  <span class="ml-auto font-weight-bold">
+                    Rp ${sub.toLocaleString('id-ID')}
+                  </span>
+                </div>
+                <small class="text-muted">Harga: Rp ${item.price.toLocaleString('id-ID')}</small>
+              </div>
+              <button class="btn btn-sm btn-danger ml-2 remove-item">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          `;
+          cartItemsEl.append(itemHtml);
+        });
 
-    // Set harga & stok di input readonly
-    $row.find('.price-input').val(price);
-    $row.find('.stock-input').val(stock);
-    // Setelah pilih, hitung ulang subtotal
-    recalcRow($row);
-  });
+        grandTotalDisplay.text('Rp ' + total.toLocaleString('id-ID'));
+      }
 
-  // Saat qty diubah
-  $(document).on('input', '.qty-input', function() {
-    const $row = $(this).closest('tr');
-    let qty = parseInt($(this).val()) || 0;
-    const stock = parseInt($row.find('.stock-input').val()) || 0;
-
-    // Pastikan qty <= stock
-    if (qty > stock) {
-      alert('Jumlah tidak boleh melebihi stok tersedia (' + stock + ').');
-      $(this).val(stock);
-      qty = stock;
+      // Update hidden inputs di dalam form untuk dikirimkan
+      updateHiddenInputs();
     }
-    recalcRow($row);
-  });
 
-  // Tombol “Tambah Baris”
-  $(document).on('click', '.add-row', function() {
-    const $lastRow = $('#orderTable tbody tr.order-row:last');
-    const $newRow = $lastRow.clone();
+    // Tambah / Update hidden inputs berdasarkan cart
+    function updateHiddenInputs() {
+      // Hapus semuanya dulu
+      $('input[name^="items"]').remove();
 
-    // Reset nilai input di clone
-    $newRow.find('select').val('');
-    $newRow.find('.price-input, .stock-input, .subtotal-input').val('0');
-    $newRow.find('.qty-input').val('1');
+      let idx = 0;
+      Object.values(cart).forEach(item => {
+        // input items[idx][product_id]
+        const inpId = `<input type="hidden" 
+                             name="items[${idx}][product_id]" 
+                             value="${item.id}">`;
+        // input items[idx][quantity]
+        const inpQty = `<input type="hidden" 
+                              name="items[${idx}][quantity]" 
+                              value="${item.qty}">`;
+        $('#orderForm').append(inpId).append(inpQty);
+        idx++;
+      });
+    }
 
-    // Sesuaikan nama atribut agar index unik
-    $newRow.find('select').attr('name', `items[${rowIndex}][product_id]`);
-    $newRow.find('.price-input').attr('name', `items[${rowIndex}][price]`);
-    $newRow.find('.stock-input').attr('name', `items[${rowIndex}][stock]`);
-    $newRow.find('.qty-input').attr('name', `items[${rowIndex}][quantity]`);
-    $newRow.find('.subtotal-input').attr('name', `items[${rowIndex}][subtotal]`);
+    // Ketika produk di‐klik, tambahkan ke cart (atau jika sudah ada, +1)
+    $(document).on('click', '.product-card', function() {
+      const pid   = $(this).data('id').toString();
+      const name  = $(this).data('name');
+      const price = parseFloat($(this).data('price'));
+      const stock = parseInt($(this).data('stock'));
+      const image = $(this).data('image');
 
-    // Tampilkan tombol “Hapus Baris” pada baris baru
-    $newRow.find('.remove-row').show();
-
-    // Sisipkan setelah baris terakhir
-    $lastRow.after($newRow);
-    rowIndex++;
-  });
-
-  // Tombol “Hapus Baris”
-  $(document).on('click', '.remove-row', function() {
-    $(this).closest('tr').remove();
-    recalcGrandTotal();
-  });
-
-  // Saat form disubmit, hijack agar nilai subtotal dalam format numeric (hilangkan ribuan)
-  $('#orderForm').on('submit', function() {
-    $('.subtotal-input').each(function() {
-      let raw = $(this).val().replace(/\./g, '').replace(/,/g, '');
-      $(this).val(raw);
+      if (!cart[pid]) {
+        if (stock < 1) {
+          alert('Stok habis!');
+          return;
+        }
+        cart[pid] = {
+          id: pid,
+          name: name,
+          price: price,
+          stock: stock,
+          image: image,
+          qty: 1
+        };
+      } else {
+        // Jika sudah ada, tambah selama tidak melebihi stok
+        if (cart[pid].qty < stock) {
+          cart[pid].qty++;
+        } else {
+          alert('Jumlah melebihi stok tersedia.');
+        }
+      }
+      renderCart();
     });
-    // Grand total tidak dikirim ke server, jadi tidak perlu diubah
+
+    // Tombol “+” pada cart untuk tambah qty
+    $(document).on('click', '.increase-qty', function(e) {
+      e.stopPropagation();
+      const pid = $(this).closest('[data-id]').data('id').toString();
+      if (cart[pid].qty < cart[pid].stock) {
+        cart[pid].qty++;
+        renderCart();
+      }
+    });
+
+    // Tombol “–” pada cart untuk kurangi qty
+    $(document).on('click', '.decrease-qty', function(e) {
+      e.stopPropagation();
+      const pid = $(this).closest('[data-id]').data('id').toString();
+      if (cart[pid].qty > 1) {
+        cart[pid].qty--;
+      }
+      renderCart();
+    });
+
+    // Tombol hapus item dari cart
+    $(document).on('click', '.remove-item', function(e) {
+      e.stopPropagation();
+      const pid = $(this).closest('[data-id]').data('id').toString();
+      delete cart[pid];
+      renderCart();
+    });
+
+    // Saat form submit, kita pastikan hidden inputs sudah terkini
+    $('#orderForm').on('submit', function() {
+      updateHiddenInputs();
+      if (Object.keys(cart).length === 0) {
+        alert('Keranjang masih kosong!');
+        return false;
+      }
+    });
+
+    // Inisialisasi awal
+    renderCart();
   });
-});
 </script>
 @endsection

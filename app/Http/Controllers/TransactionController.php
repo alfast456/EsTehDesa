@@ -36,7 +36,7 @@ class TransactionController extends Controller
         }
 
         // Jalankan paginasi (10 item per halaman)
-        $transactions = $query->paginate(10)->withQueryString();
+        $transactions = $query->paginate(50)->withQueryString();
 
         return view('transactions.index', compact('transactions', 'from', 'to'));
     }

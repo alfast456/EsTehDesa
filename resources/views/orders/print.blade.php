@@ -4,90 +4,129 @@
   <meta charset="UTF-8">
   <title>Struk Pesanan #{{ $order->id }}</title>
   <style>
+    /* Atur ukuran kertas thermal 80 mm */
+    @page {
+      size: 80mm auto;
+      margin: 0;
+    }
     body {
-      font-family: Arial, sans-serif;
-      font-size: 12px;
-      margin: 20px;
+      width: 80mm;
+      margin: 0 auto;
+      padding: 5px 5px 0 5px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 11px;
+      line-height: 1.3;
     }
     .store-name {
       text-align: center;
       font-weight: bold;
-      font-size: 16px;
-      margin-bottom: 10px;
+      font-size: 13px;
+      margin-bottom: 3px;
     }
-    .info, .items, .footer {
-      width: 100%;
-      margin-bottom: 10px;
-    }
-    .items th, .items td {
-      padding: 4px 0;
-    }
-    .items th {
+    .separator {
       border-bottom: 1px dashed #000;
+      margin: 4px 0;
     }
-    .items td {
-      border-bottom: 1px dotted #ccc;
+    .info, .footer {
+      font-size: 10px;
+      margin-bottom: 4px;
     }
-    .text-right {
+    .info p {
+      margin: 2px 0;
+    }
+    .items {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+    }
+    .items td, .items th {
+      padding: 2px 0;
+    }
+    .items .col-name {
+      width: 55%;
+      text-align: left;
+      vertical-align: top;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .items .col-detail {
+      width: 25%;
+      text-align: center;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+    .items .col-sub {
+      width: 20%;
       text-align: right;
+      vertical-align: top;
+      white-space: nowrap;
     }
     .total-row {
+      border-top: 1px dashed #000;
+      padding-top: 3px;
+      margin-top: 3px;
       font-weight: bold;
-      border-top: 1px solid #000;
-      margin-top: 5px;
-      padding-top: 5px;
     }
     .footer {
-      margin-top: 20px;
       text-align: center;
-      font-size: 10px;
+      font-size: 9px;
     }
   </style>
 </head>
 <body onload="window.print()">
+  <!-- Nama Toko -->
   <div class="store-name">
     Tehdesa<br>
     Sistem Pemesanan
   </div>
 
+  <div class="separator"></div>
+
+  <!-- Informasi Pesanan -->
   <div class="info">
-    <p>
-      <span><strong>No. Pesanan:</strong> {{ $order->id }}</span><br>
-      <span><strong>Tanggal:</strong> {{ $order->created_at->format('d-m-Y H:i') }}</span><br>
-      <span><strong>Status:</strong> {{ ucfirst($order->status) }}</span>
-    </p>
+    <p>No. Pesanan : {{ $order->id }}</p>
+    <p>Tanggal     : {{ $order->created_at->format('d-m-Y H:i') }}</p>
+    <p>Status      : {{ ucfirst($order->status) }}</p>
   </div>
 
+  <div class="separator"></div>
+
+  <!-- Daftar Item -->
   <table class="items">
-    <thead>
+    @foreach($order->details as $idx => $detail)
+      @php
+        // Potong nama produk maks 18 karakter agar tidak melebar
+        $rawName = $detail->product->name;
+        if(strlen($rawName) > 18) {
+            $name = substr($rawName, 0, 15) . '...';
+        } else {
+            $name = $rawName;
+        }
+        $qty   = $detail->quantity;
+        $price = number_format($detail->unit_price, 0, ',', '.');
+        $sub   = number_format($detail->sub_total, 0, ',', '.');
+        $detailText = $qty . '×' . $price;
+      @endphp
+
       <tr>
-        <th>No</th>
-        <th>Produk</th>
-        <th class="text-right">Qty</th>
-        <th class="text-right">Harga (Rp)</th>
-        <th class="text-right">Sub (Rp)</th>
+        <td class="col-name">{{ $name }}</td>
+        <td class="col-detail">{{ $detailText }}</td>
+        <td class="col-sub">Rp {{ $sub }}</td>
       </tr>
-    </thead>
-    <tbody>
-      @foreach($order->details as $idx => $detail)
-        <tr>
-          <td>{{ $idx + 1 }}</td>
-          <td>{{ $detail->product->name }}</td>
-          <td class="text-right">{{ $detail->quantity }}</td>
-          <td class="text-right">{{ number_format($detail->unit_price, 0, ',', '.') }}</td>
-          <td class="text-right">{{ number_format($detail->sub_total, 0, ',', '.') }}</td>
-        </tr>
-      @endforeach
-      <tr class="total-row">
-        <td colspan="4" class="text-right">Total:</td>
-        <td class="text-right">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</td>
-      </tr>
-    </tbody>
+    @endforeach
+
+    <tr class="total-row">
+      <td colspan="2">Total</td>
+      <td class="col-sub">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</td>
+    </tr>
   </table>
 
+  <div class="separator"></div>
+
+  <!-- Footer -->
   <div class="footer">
-    <p>Terima kasih telah berbelanja di Tehdesa!</p>
-    <p>www.tehdesa.local</p>
+    Terima kasih telah<br>
+    berbelanja di Tehdesa!
   </div>
 </body>
 </html>

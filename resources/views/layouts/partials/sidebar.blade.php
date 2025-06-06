@@ -41,14 +41,11 @@
                 <i class="fas fa-fw fa-tags"></i> Kategori
               </a>
             </div>
+            <div class="bg-white py-2 collapse-inner rounded">
+              <a class="collapse-item" href="{{ route('products.index') }}">
+                <i class="fas fa-fw fa-box"></i> Produk
+              </a>
           </div>
-        </li>
-
-        <!-- Nav Item - Pemasukan -->
-        <li class="nav-item">
-          <a class="nav-link" href="{{ route('products.index') }}">
-            <i class="fas fa-fw fa-plus-circle"></i>
-            <span>Produk</span></a>
         </li>
 
         <!-- Nav Item - create order -->

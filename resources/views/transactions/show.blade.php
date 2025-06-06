@@ -23,34 +23,29 @@
       <h6 class="font-weight-bold text-primary mb-0">Informasi Transaksi</h6>
     </div>
     <div class="card-body">
-      <div class="row mb-2">
-        <div class="col-md-4">
-          <p><strong>ID Transaksi:</strong> {{ $transaction->id }}</p>
+      <div class="form-row">
+        <div class="form-group col-12 col-md-4">
+          <p class="mb-1"><strong>ID Transaksi:</strong> {{ $transaction->id }}</p>
         </div>
-        <div class="col-md-4">
-          <p>
-            <strong>No. Pesanan:</strong> {{ $transaction->order->id }}
-          </p>
+        <div class="form-group col-12 col-md-4">
+          <p class="mb-1"><strong>No. Pesanan:</strong> {{ $transaction->order->id }}</p>
         </div>
-        <div class="col-md-4">
-          <p>
+        <div class="form-group col-12 col-md-4">
+          <p class="mb-1">
             <strong>Tanggal Bayar:</strong>
-            {{ $transaction->paid_at 
-                ? $transaction->paid_at->format('d-m-Y H:i') 
-                : '-' 
-            }}
+            {{ $transaction->paid_at ? $transaction->paid_at->format('d-m-Y H:i') : '-' }}
           </p>
         </div>
       </div>
-      <div class="row mb-2">
-        <div class="col-md-4">
-          <p>
-            <strong>Total Pembayaran:</strong> 
+      <div class="form-row">
+        <div class="form-group col-12 col-md-4">
+          <p class="mb-1">
+            <strong>Total Pembayaran:</strong>
             Rp {{ number_format($transaction->order->total_amount, 0, ',', '.') }}
           </p>
         </div>
-        <div class="col-md-4">
-          <p class="text-capitalize">
+        <div class="form-group col-12 col-md-4">
+          <p class="mb-1 text-capitalize">
             <strong>Status Pembayaran:</strong> {{ $transaction->payment_status }}
           </p>
         </div>
@@ -64,8 +59,9 @@
       <h6 class="font-weight-bold text-primary mb-0">Rincian Pesanan</h6>
     </div>
     <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-bordered">
+      <!-- Tabel responsif untuk desktop/tablet -->
+      <div class="table-responsive d-none d-sm-block">
+        <table class="table table-bordered table-hover">
           <thead class="thead-light">
             <tr>
               <th>No</th>
@@ -81,12 +77,8 @@
                 <td>{{ $idx + 1 }}</td>
                 <td>{{ $detail->product->name }}</td>
                 <td class="text-right">{{ $detail->quantity }}</td>
-                <td class="text-right">
-                  {{ number_format($detail->unit_price, 0, ',', '.') }}
-                </td>
-                <td class="text-right">
-                  {{ number_format($detail->sub_total, 0, ',', '.') }}
-                </td>
+                <td class="text-right">{{ number_format($detail->unit_price, 0, ',', '.') }}</td>
+                <td class="text-right">{{ number_format($detail->sub_total, 0, ',', '.') }}</td>
               </tr>
             @endforeach
           </tbody>
@@ -99,6 +91,32 @@
             </tr>
           </tfoot>
         </table>
+      </div>
+
+      <!-- List card untuk mobile -->
+      <div class="d-block d-sm-none">
+        @foreach($transaction->order->details as $idx => $detail)
+          <div class="card mb-2">
+            <div class="card-body p-2">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <p class="mb-1"><strong>#{{ $idx + 1 }} - {{ $detail->product->name }}</strong></p>
+                </div>
+                <div class="text-right">
+                  <p class="mb-1"><strong>Rp {{ number_format($detail->sub_total, 0, ',', '.') }}</strong></p>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between">
+                <p class="mb-0 small text-muted">Qty: {{ $detail->quantity }}</p>
+                <p class="mb-0 small text-muted">Harga: Rp {{ number_format($detail->unit_price, 0, ',', '.') }}</p>
+              </div>
+            </div>
+          </div>
+        @endforeach
+        <div class="d-flex justify-content-between mt-3">
+          <p class="mb-0 font-weight-bold">Total</p>
+          <p class="mb-0 font-weight-bold">Rp {{ number_format($transaction->order->total_amount, 0, ',', '.') }}</p>
+        </div>
       </div>
     </div>
   </div>

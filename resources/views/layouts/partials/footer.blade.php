@@ -5,7 +5,7 @@
 <footer class="sticky-footer bg-white">
   <div class="container my-auto">
     <div class="copyright text-center my-auto">
-      <span>Copyright &copy; @php echo date('Y'); @endphp - Alfa Hardiyansyah</span>
+      <span>Copyright &copy; @php echo date('Y'); @endphp - Es Teh Desa</span>
     </div>
   </div>
 </footer>
@@ -52,3 +52,5 @@
 <script src="{{ asset('vendor/jquery-easing/jquery.easing.min.js') }}"></script>
 <script src="{{ asset('js/sb-admin-2.min.js') }}"></script>
 <!-- <script src="{{ asset('vendor/chart.js/Chart.min.js') }}"></script> -->
+
+@stack('scripts')
