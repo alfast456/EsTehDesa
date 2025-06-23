@@ -1,6 +1,6 @@
 # 🧋 EsTehDesa
 
-**EsTehDesa** adalah aplikasi kasir berbasis web yang dibangun menggunakan Laravel 10. Aplikasi ini cocok digunakan oleh UMKM atau warung minuman seperti es teh kekinian di pedesaan untuk mengelola produk, memproses pemesanan, dan mencatat transaksi dengan praktis dan efisien.
+**EsTehDesa** adalah aplikasi kasir berbasis Laravel yang juga dapat dijalankan sebagai aplikasi Android menggunakan **Apache Cordova**. Cocok digunakan untuk warung atau UMKM minuman kekinian di pedesaan.
 
 ---
 
@@ -13,7 +13,8 @@
 - 💰 Pemesanan & Pembayaran (Kasir/Admin)
 - 🖨️ Print nota pemesanan
 - 💳 Pembayaran manual + integrasi QRCode (generate, bukan scan)
-- 📜 Riwayat Transaksi (lihat detail)
+- 📜 Riwayat Transaksi
+- 📱 Bisa diakses via browser **ataupun Android app** via Cordova
 
 ---
 
@@ -24,12 +25,13 @@
 | Backend       | Laravel 10, PHP ^8.1           |
 | Frontend      | Bootstrap 5, Blade, SASS       |
 | Build Tools   | Vite, Laravel Vite Plugin      |
+| Mobile        | Cordova + cordova-android      |
 | Auth          | Laravel UI (Blade scaffolding) |
-| Tambahan      | Axios                          |
+| Tambahan      | `simple-qrcode`, Axios         |
 
 ---
 
-## ⚙️ Instalasi
+## ⚙️ Instalasi Laravel (Web)
 
 ```bash
 # 1. Clone repo
@@ -42,11 +44,11 @@ composer install
 # 3. Install dependency frontend
 npm install
 
-# 4. Salin file .env dan generate key
+# 4. Setup env dan generate key
 cp .env.example .env
 php artisan key:generate
 
-# 5. Konfigurasi .env
+# 5. Konfigurasi database di .env
 # DB_DATABASE=estehdesa
 # DB_USERNAME=root
 # DB_PASSWORD=
@@ -54,16 +56,48 @@ php artisan key:generate
 # 6. Jalankan migrasi
 php artisan migrate
 
-# 7. Jalankan server lokal
+# 7. Jalankan aplikasi
 npm run dev
 php artisan serve
 ```
 
 ---
 
-## 🧪 Testing Akun (Opsional)
+## 📱 Build Android dengan Cordova
 
-Jika kamu memiliki seeder atau user default:
+> Aplikasi Laravel berjalan secara lokal, dan dibungkus menjadi APK via Cordova WebView.
+
+### 1. Instalasi Cordova
+
+```bash
+npm install -g cordova
+```
+
+### 2. Buat project Cordova
+
+```bash
+cordova create com.android.esteh “Esteh”
+cd com.android.esteh
+cordova platform add android
+```
+
+### 3. Integrasi Laravel ke Cordova
+
+- Pastikan Laravel kamu bisa diakses di IP LAN (contoh `http://192.168.0.5:8000`)
+- Ubah file `config.xml` dan `index.html` agar memuat URL Laravel via WebView
+- Atur `AndroidManifest.xml` agar mengizinkan akses internet
+
+### 4. Build APK
+
+```bash
+cordova build android
+```
+
+APK akan berada di folder `platforms/android/app/build/outputs/apk/debug/app-debug.apk`.
+
+---
+
+## 🔐 Login Dummy (Opsional)
 
 ```
 Email: admin@example.com
@@ -72,35 +106,13 @@ Password: password
 
 ---
 
-## 📦 Struktur Route
+## 📦 Route Aplikasi
 
-- `/` → Halaman login
-- `/dashboard` → Dashboard utama (auth only)
-- `/products`, `/categories` → Manajemen produk & kategori
-- `/orders` → POS Kasir (create, store, show, destroy)
-- `/orders/{id}/pay` → Proses pembayaran
-- `/orders/{id}/print` → Cetak nota
-- `/transactions` → Riwayat transaksi
-
----
-
-## 🧰 Build Produksi
-
-```bash
-npm run build
-```
-
----
-
-## 📷 Screenshot (Opsional)
-
-> Tambahkan screenshot tampilan halaman seperti dashboard, pemesanan, atau cetak QR code di sini.
-
----
-
-## 🤝 Kontribusi
-
-Pull request terbuka! Silakan fork repo, buat branch baru, dan ajukan PR.
+- `/` → Login
+- `/dashboard` → Dashboard
+- `/products`, `/categories`
+- `/orders` → Pemesanan
+- `/transactions`
 
 ---
 
