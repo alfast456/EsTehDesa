@@ -12,7 +12,7 @@
 - 🗂️ Manajemen Kategori Produk *(admin only)*
 - 💰 Pemesanan & Pembayaran (Kasir/Admin)
 - 🖨️ Print nota pemesanan
-- 💳 Pembayaran manual + integrasi QRCode (generate, bukan scan)
+- 💳 Pembayaran manual
 - 📜 Riwayat Transaksi
 - 📱 Bisa diakses via browser **ataupun Android app** via Cordova
 
@@ -27,7 +27,7 @@
 | Build Tools   | Vite, Laravel Vite Plugin      |
 | Mobile        | Cordova + cordova-android      |
 | Auth          | Laravel UI (Blade scaffolding) |
-| Tambahan      | `simple-qrcode`, Axios         |
+| Tambahan      | Axios                          |
 
 ---
 
