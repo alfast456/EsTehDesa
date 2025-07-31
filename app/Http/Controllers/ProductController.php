@@ -13,7 +13,10 @@ class ProductController extends Controller
     public function index()
     {
         // Mengambil data produk beserta relasi category, 10 per halaman
-        $products = Product::with('category')->orderBy('created_at', 'desc')->paginate(10);
+        $products = Product::with('category')
+            ->where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
         return view('products.index', compact('products'));
     }
@@ -41,6 +44,7 @@ class ProductController extends Controller
             'price'       => 'required|numeric|min:0',
             'stock'       => 'required|integer|min:0',
             'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'user_id'     => 'required|exists:users,id',
         ]);
 
         // Jika ada gambar, simpan ke folder storage/app/public/products
@@ -86,6 +90,7 @@ class ProductController extends Controller
             'price'       => 'required|numeric|min:0',
             'stock'       => 'required|integer|min:0',
             'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'user_id'     => 'required|exists:users,id',
         ]);
 
         // Jika ada gambar baru, hapus gambar lama jika ada, lalu simpan yang baru

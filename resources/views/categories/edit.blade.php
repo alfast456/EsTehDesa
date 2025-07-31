@@ -31,6 +31,8 @@
           <input type="text" name="name" id="name"
                  class="form-control" value="{{ old('name', $category->name) }}" required>
         </div>
+        {{-- hidden user_id --}}
+        <input type="hidden" name="user_id" value="{{ auth()->id() }}">
 
         <button type="submit" class="btn btn-success">
           <i class="fas fa-save"></i> Update

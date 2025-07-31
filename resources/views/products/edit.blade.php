@@ -70,7 +70,7 @@
             <div class="form-group">
               <label>Gambar Saat Ini</label><br>
               @if($product->image && Storage::exists('public/' . $product->image))
-                <img src="{{ asset('storage/' . $product->image) }}"
+                <img src="{{ Storage::url('app/public/' . $product->image) }}"
                      alt="{{ $product->name }}"
                      class="img-fluid mb-3"
                      style="max-width: 200px;">
@@ -86,6 +86,9 @@
                 Pilih file jika ingin mengubah gambar. Maks 2MB.
               </small>
             </div>
+
+            {{-- hidden user_id --}}
+            <input type="hidden" name="user_id" value="{{ auth()->id() }}
 
             <button type="submit" class="btn btn-success">
               <i class="fas fa-save"></i> Update

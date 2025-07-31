@@ -29,14 +29,21 @@ class DashboardController extends Controller
     // Contoh di DashboardController@index
     public function index()
     {
-        $todaySales = Order::whereDate('created_at', now())->sum('total_amount');
-        $totalProducts = Product::count();
+        $userId = auth()->id();
+
+        $todaySales = Order::where('user_id', $userId)
+            ->whereDate('created_at', now())
+            ->sum('total_amount');
+        $totalProducts = Product::where('user_id', $userId)->count();
         $lowStockThreshold = 5; // misalnya
-        $lowStockCount = Product::where('stock', '<=', $lowStockThreshold)->count();
-        $totalOrders = Order::count();
+        $lowStockCount = Product::where('user_id', $userId)
+            ->where('stock', '<=', $lowStockThreshold)
+            ->count();
+        $totalOrders = Order::where('user_id', $userId)->count();
 
         // Grafik 7 hari terakhir
         $salesLast7Days = Order::selectRaw("DATE(created_at) as date, SUM(total_amount) as total")
+            ->where('user_id', $userId)
             ->where('created_at', '>=', now()->subDays(6)->startOfDay())
             ->groupBy('date')
             ->orderBy('date')
@@ -45,7 +52,8 @@ class DashboardController extends Controller
         $totals = $salesLast7Days->pluck('total')->map(fn($v) => (float)$v)->toArray();
 
         // Ringkasan Bulanan
-        $monthSales = Order::whereYear('created_at', now()->year)
+        $monthSales = Order::where('user_id', $userId)
+            ->whereYear('created_at', now()->year)
             ->whereMonth('created_at', now()->month)
             ->sum('total_amount');
         $daysInMonthSoFar = now()->day;
@@ -55,7 +63,12 @@ class DashboardController extends Controller
 
         // Top 5 Produk Terlaris
         $topProducts = Product::select('products.id', 'products.name')
+            ->where('products.user_id', $userId)
             ->join('order_details', 'products.id', 'order_details.product_id')
+            ->join('orders', function ($join) use ($userId) {
+                $join->on('orders.id', '=', 'order_details.order_id')
+                    ->where('orders.user_id', $userId);
+            })
             ->selectRaw('products.name, SUM(order_details.quantity) as total_sold')
             ->groupBy('products.id', 'products.name')
             ->orderByDesc('total_sold')
@@ -63,7 +76,10 @@ class DashboardController extends Controller
             ->get();
 
         // 5 Pesanan Terbaru
-        $recentOrders = Order::orderByDesc('created_at')->limit(5)->get();
+        $recentOrders = Order::where('user_id', $userId)
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
 
         return view('dashboard.index', compact(
             'todaySales',

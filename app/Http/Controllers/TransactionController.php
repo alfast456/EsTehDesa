@@ -21,6 +21,7 @@ class TransactionController extends Controller
 
         // Inisialisasi query
         $query = Transaction::with(['order', 'order.details.product'])
+            ->where('user_id', auth()->id())
             ->orderBy('paid_at', 'desc');
 
         // Jika ada filter tanggal
@@ -47,7 +48,11 @@ class TransactionController extends Controller
     public function show(Transaction $transaction)
     {
         // Pastikan relasi ter‐load
-        $transaction->load(['order', 'order.details.product']);
+        $transaction->load([
+            'order',
+            'order.details',
+            'order.details.product'
+        ]);
 
         return view('transactions.show', compact('transaction'));
     }
