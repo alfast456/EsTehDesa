@@ -140,9 +140,9 @@
         <div class="alert alert-success">
           <p>
             Pembayaran <strong>berhasil</strong> pada
-            {{ $order->transaction->paid_at->format('d-m-Y H:i') }}.
+            {{ $transaction->paid_at->format('d-m-Y H:i') }}.
           </p>
-          <a href="{{ route('orders.print', $order->id) }}" class="btn btn-dark">
+          <a href="{{ route('orders.print', $transaction->order->id) }}" class="btn btn-dark">
             <i class="fas fa-print"></i> Cetak Struk
           </a>
         </div>
