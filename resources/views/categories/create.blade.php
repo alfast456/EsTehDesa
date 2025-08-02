@@ -30,7 +30,7 @@
                  class="form-control" value="{{ old('name') }}" required>
         </div>
         {{-- hidden user_id --}}
-        <input type="hidden" name="user_id" value="{{ auth()->id() }}">
+        {{-- <input type="hidden" name="user_id" value="{{ auth()->id() }}"> --}}
         {{-- end hidden user_id --}}
 
         <button type="submit" class="btn btn-primary">

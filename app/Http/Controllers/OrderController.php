@@ -16,8 +16,8 @@ class OrderController extends Controller
     public function create()
     {
         // Ambil semua produk (nama, harga, stok) untuk dropdown
-        $products = Product::select(['id', 'name', 'price', 'stock', 'image', 'user_id'])
-            ->where('user_id', auth()->id())
+        $products = Product::select(['id', 'name', 'price', 'stock', 'image'])
+            // ->where('user_id', auth()->id())
             ->orderBy('name')
             ->get();
         return view('orders.create', compact('products'));
@@ -33,9 +33,9 @@ class OrderController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity'   => 'required|integer|min:1',
-            'user_id' => 'required|exists:users,id',
+            // 'user_id' => 'required|exists:users,id',
         ]);
-
+        // dd ($request->all());
         // Hitung total amount
         $totalAmount = 0;
         foreach ($request->items as $item) {
@@ -46,7 +46,7 @@ class OrderController extends Controller
 
         // Simpan Order header
         $order = Order::create([
-            'user_id'    => $request->user_id,
+            // 'user_id'    => $request->user_id,
             'total_amount' => $totalAmount,
             'status'       => 'pending',   // status awal
             // Anda bisa menambahkan kolom lain misalnya user_id, etc.
@@ -72,10 +72,13 @@ class OrderController extends Controller
         Transaction::create([
             'order_id'       => $order->id,
             'payment_status' => 'unpaid',
-            'user_id'        => $order->user_id,
+            // 'user_id'        => $order->user_id,
             // 'qr_code_data'  => null,  // kita tidak butuh QRIS otomatis
         ]);
 
+        if (!auth()->check()) {
+            return redirect()->route('pemesanan.show', $order->id);
+        }
         return redirect()->route('orders.show', $order->id)
             ->with('success', 'Order berhasil dibuat. Silakan lakukan pembayaran secara manual menggunakan QRIS.');
     }

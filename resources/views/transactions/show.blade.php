@@ -119,6 +119,36 @@
         </div>
       </div>
     </div>
+
+    <!-- Bagian Pembayaran Manual -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="font-weight-bold text-primary mb-0">Pembayaran</h6>
+    </div>
+    <div class="card-body">
+      @if($transaction->order->status === 'pending')
+        <p class="mb-3">
+          Silakan lakukan pembayaran menggunakan QRIS secara manual (scan kode QRIS di kasir atau gunakan aplikasi dompet digital).
+        </p>
+        <form action="{{ route('orders.pay', $transaction->order->id) }}" method="POST">
+          @csrf
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-check-circle"></i> Tandai Sudah Dibayar
+          </button>
+        </form>
+      @else
+        <div class="alert alert-success">
+          <p>
+            Pembayaran <strong>berhasil</strong> pada
+            {{ $order->transaction->paid_at->format('d-m-Y H:i') }}.
+          </p>
+          <a href="{{ route('orders.print', $order->id) }}" class="btn btn-dark">
+            <i class="fas fa-print"></i> Cetak Struk
+          </a>
+        </div>
+      @endif
+    </div>
+  </div>
   </div>
 </div>
 @endsection

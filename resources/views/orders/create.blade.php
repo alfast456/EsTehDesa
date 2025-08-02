@@ -106,7 +106,7 @@
         </div>
 
         {{-- hidden user_id --}}
-        <input type="hidden" name="user_id" value="{{ auth()->id() }}">
+        {{-- <input type="hidden" name="user_id" value="{{ auth()->id() }}"> --}}
         <!-- Tombol Submit -->
         <div class="text-center">
           <button type="submit" class="btn btn-success btn-block mb-3" id="submitOrderBtn" disabled>

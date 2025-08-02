@@ -21,8 +21,8 @@ class TransactionController extends Controller
 
         // Inisialisasi query
         $query = Transaction::with(['order', 'order.details.product'])
-            ->where('user_id', auth()->id())
-            ->orderBy('paid_at', 'desc');
+            // ->where('user_id', auth()->id())
+            ->orderBy('id', 'desc');
 
         // Jika ada filter tanggal
         if ($from && $to) {

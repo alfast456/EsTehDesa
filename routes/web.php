@@ -4,11 +4,13 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers;
 
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\CategoryController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -23,7 +25,14 @@ use App\Http\Controllers\CategoryController;
 // Route::get('/', function () {
 //     return view('welcome');
 // });
-Route::view('/', 'auth.login')->name('home');
+Route::view('/', [HomeController::class, 'user'])->name('home');
+Route::get('/pemesanan', [HomeController::class, 'pemesanan'])
+    ->name('pemesanan');
+Route::post('/pemesanan/store', [OrderController::class, 'store'])
+    ->name('pemesanan.store');
+Route::get('/pemesanan/show/{order}', [HomeController::class, 'detailpemesanan'])
+    ->name('pemesanan.show');
+// Route::view('/auth', 'auth.login')->name('auth.login');
 
 Route::get('/login', [Auth\LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [Auth\LoginController::class, 'login']);

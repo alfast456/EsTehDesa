@@ -10,9 +10,7 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = Category::with('user')
-            ->where('user_id', auth()->id())
-            ->orderBy('name')
+        $categories = Category::orderBy('name')
             ->paginate(10);
 
         return view('categories.index', compact('categories'));
@@ -34,7 +32,7 @@ class CategoryController extends Controller
         // Validasi input
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:categories,name',
-            'user_id' => 'required|exists:users,id',
+            // 'user_id' => 'required|exists:users,id',
         ]);
 
         Category::create($validated);
@@ -59,7 +57,7 @@ class CategoryController extends Controller
         $validated = $request->validate([
             // Unique:abaikan kategori yang sedang diedit ($category->id)
             'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
-            'user_id' => 'nullable|exists:users,id', // Pastikan user_id valid
+            // 'user_id' => 'nullable|exists:users,id', // Pastikan user_id valid
         ]);
 
         $category->update($validated);

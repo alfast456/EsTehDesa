@@ -13,7 +13,7 @@ class Transaction extends Model
         'order_id',
         'payment_status',
         'paid_at',
-        'user_id'
+        // 'user_id'
     ];
 
     // Tambahkan baris ini:
@@ -26,8 +26,8 @@ class Transaction extends Model
         return $this->belongsTo(Order::class);
     }
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    // public function user()
+    // {
+    //     return $this->belongsTo(User::class);
+    // }
 }

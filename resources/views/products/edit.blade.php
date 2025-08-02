@@ -88,7 +88,7 @@
             </div>
 
             {{-- hidden user_id --}}
-            <input type="hidden" name="user_id" value="{{ auth()->id() }}
+            {{-- <input type="hidden" name="user_id" value="{{ auth()->id() }}"> --}}
 
             <button type="submit" class="btn btn-success">
               <i class="fas fa-save"></i> Update
